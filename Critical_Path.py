@@ -1,5 +1,7 @@
 # Critical Path.py
 # A test to compute this stuff easier
+# Martin Borgén
+# 2023-02-19
 
 from typing import List
 from collections import deque
@@ -42,7 +44,7 @@ class Task:
 
 class Path: # This might be re-made into a subclass of a list, come to think of it
     def __init__(self):
-        self.totTime = None
+        self.totTime = 0
         self.path = []
         self.modified = False
         
@@ -71,22 +73,23 @@ class TaskTree:
         self.tasks: dict[str:Task] = {}     # tasks is a dict where each label correstponds to a Task instnace
         self.noDeps: List[Task] = []    # a list of tasks with no dependencies, useful for finding starting points
         self.paths: List[Path] = []     # This list will hold all possible paths.
+        self.criticalPaths = [Path()]      # dummy path so comparisions will return higher
 
     def createTask(self, label: str, dependencies: List[str]=[], dur=None): # Dependencies must be string labels, hence one has to add in chronological order?
         if len(dependencies) > 0 and isinstance(dependencies[0], str): # if we have dependencies and it's strings, convert to list of tasks
             depTasks = []
-            for i in dependencies:
-                depTasks.append(self.tasks[i])
+            for depLabel in dependencies:
+                depTasks.append(self.tasks[depLabel])
         else:
             depTasks = dependencies
 
-        task = Task(label, depTasks, dur=dur)
+        task = Task(label, depTasks, dur)
         self.tasks[task.label] = task
         
         if len(dependencies) == 0:
             self.noDeps.append(task)
         
-    def mapDependencies(self):  # so far, this maps the dependencies both ways, but I think it might as well do the early/late start/finishes too?
+    def mapDependencies(self):  # Maps dependencies both ways
         for task in self.tasks.values():
             for dep in task.dependencies:
                 try:
@@ -96,7 +99,7 @@ class TaskTree:
                 else:
                     depTask.dependsOnThis.append(task)
 
-    def updateEarlyLates(self):
+    def updateEarlyLates(self): # updates the early and late finishes, as well as float for each task
         # Forward pass
         taskTiers = deque()     # TaskTiers will be a deque of deques, where each subdeque is a generation, i.e. a distance from start
         for _ in range(self.end.distanceFromStart + 1):
@@ -119,7 +122,7 @@ class TaskTree:
         for task in self.tasks.values():
             task.calculateFloat()
         
-    def generatePaths(self):    # this is essentially a bootstrapper to the recursive function. At the moment, it must be run only once I think
+    def generatePaths(self):    # The beginning starts the recursive function. Then the critical path(s) is/are identified
         current = self.start
         self._pathRecFun(current, Path())
             
@@ -127,12 +130,19 @@ class TaskTree:
         if current.distanceFromStart < len(pathSoFar): # if statement, so that we only get the furthest distance
             current.distanceFromStart = len(pathSoFar)
         pathSoFar.append(current)
+
         if not current.dependsOnThis:
             # If we're at the end of the tree
             self.paths.append(pathSoFar)
             pathSoFar.calcTotTime()
             self.end = current # This assumes only one end task
             current.distanceFromEnd = 0
+
+            # check if it's a critical path
+            if pathSoFar.totTime > self.criticalPaths[0].totTime:
+                self.criticalPaths = [pathSoFar]
+            elif pathSoFar.totTime == self.criticalPaths[0].totTime:
+                self.criticalPaths.append(pathSoFar)
             return
         
         # First, copy the necessary ammount of pathSoFar. We need one less copy than we have forks, as we already have one path
@@ -163,10 +173,10 @@ if __name__ == '__main__':
     tree.createTask('B', ['A'], dur=2)
     tree.createTask('D', ['B'], dur=2)
     tree.createTask('C', ['A'], dur=3)
-    # tree.createTask('P', ['B'], dur=2)
-    # tree.createTask('Q', ['A'], dur=1)
-    # tree.createTask('R', ['Q'], dur=1)
-    tree.createTask('E', ['D', 'C'], dur=5)
+    tree.createTask('P', ['B'], dur=2)
+    tree.createTask('Q', ['A'], dur=1)
+    tree.createTask('R', ['Q'], dur=1)
+    tree.createTask('E', ['D', 'C', 'P', 'R'], dur=5)
 
     tree.mapDependencies()
     tree.printTree()
@@ -178,6 +188,13 @@ if __name__ == '__main__':
 
     for path in tree.paths:
         print(f"one path with total time {path.totTime} is:")
+        for task in path.path:
+            print(f"{task.label}, earlyStart {task.earlyStart}, dur {task.duration} earlyFinish {task.earlyFinish}")
+            print(f"lateStart {task.lateStart}, float {task.float}, lateFinish {task.lateFinish}")
+        print()
+
+    for path in tree.criticalPaths:
+        print(f"criticalPaths path with total time {path.totTime} is:")
         for task in path.path:
             print(f"{task.label}, earlyStart {task.earlyStart}, dur {task.duration} earlyFinish {task.earlyFinish}")
             print(f"lateStart {task.lateStart}, float {task.float}, lateFinish {task.lateFinish}")
