@@ -17,11 +17,11 @@ class Task:
         self.float = None
         self.dependencies: List[Task] = dependencies
         self.dependsOnThis: List[Task] = []
-        self.distanceFromStart = None
-        self.distanceFromEnd = None
+        self.distanceFromStart = 0
+        self.distanceFromEnd = 0
     
     def calculateFloat(self):
-        self.float = self.earlyStart - self.lateStart
+        self.float = self.lateFinish - self.earlyFinish
     
     def calculateEarlies(self): # To be run in forward pass
         if not self.dependencies:
@@ -61,6 +61,9 @@ class Path: # This might be re-made into a subclass of a list, come to think of 
             tot += task.duration
         self.totTime = tot
 
+    def __len__(self):
+        return len(self.path)
+
 class TaskTree:
     def __init__(self):
         self.start: Task = None
@@ -95,12 +98,22 @@ class TaskTree:
 
     def updateEarlyLates(self):
         # Forward pass
-        current = self.start
-        current.calculateEarlies()
-        
-        
+        taskTiers = deque()     # TaskTiers will be a deque of deques, where each subdeque is a generation, i.e. a distance from start
+        for _ in range(self.end.distanceFromStart + 1):
+            taskTiers.append(deque())
+        for task in self.tasks.values():
+            taskTiers[task.distanceFromStart].append(task)
+            task.distanceFromEnd = self.end.distanceFromStart - task.distanceFromStart
+
+        # Forward pass
+        for tier in taskTiers:
+            for task in tier:
+                task.calculateEarlies()
+        taskTiers.reverse()
         # Backwards pass
-        
+        for tier in taskTiers:
+            for task in tier:
+                task.calculateLates()
 
         # fill in float
         for task in self.tasks.values():
@@ -111,12 +124,15 @@ class TaskTree:
         self._pathRecFun(current, Path())
             
     def _pathRecFun(self, current: Task, pathSoFar: Path):    # Recursively goes through the graph, clones the current path if it finds a fork.
+        if current.distanceFromStart < len(pathSoFar): # if statement, so that we only get the furthest distance
+            current.distanceFromStart = len(pathSoFar)
         pathSoFar.append(current)
         if not current.dependsOnThis:
             # If we're at the end of the tree
             self.paths.append(pathSoFar)
             pathSoFar.calcTotTime()
             self.end = current # This assumes only one end task
+            current.distanceFromEnd = 0
             return
         
         # First, copy the necessary ammount of pathSoFar. We need one less copy than we have forks, as we already have one path
@@ -147,22 +163,23 @@ if __name__ == '__main__':
     tree.createTask('B', ['A'], dur=2)
     tree.createTask('D', ['B'], dur=2)
     tree.createTask('C', ['A'], dur=3)
-    tree.createTask('P', ['B'], dur=2)
-    tree.createTask('Q', ['A'], dur=1)
-    tree.createTask('R', ['Q'], dur=1)
-    tree.createTask('E', ['D', 'C', 'P', 'R'], dur=5)
+    # tree.createTask('P', ['B'], dur=2)
+    # tree.createTask('Q', ['A'], dur=1)
+    # tree.createTask('R', ['Q'], dur=1)
+    tree.createTask('E', ['D', 'C'], dur=5)
 
     tree.mapDependencies()
     tree.printTree()
 
     tree.start = tree.tasks['A']
     tree.generatePaths()
-    # tree.updateEarlyLates()
+    tree.updateEarlyLates()
     print("total paths found:", len(tree.paths))
 
     for path in tree.paths:
         print(f"one path with total time {path.totTime} is:")
         for task in path.path:
-            print(task.label)
+            print(f"{task.label}, earlyStart {task.earlyStart}, dur {task.duration} earlyFinish {task.earlyFinish}")
+            print(f"lateStart {task.lateStart}, float {task.float}, lateFinish {task.lateFinish}")
         print()
     
