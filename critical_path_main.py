@@ -28,8 +28,7 @@ def main():
     for path in tree.criticalPaths:
         print(f"criticalPaths path with total time {path.totTime} is:")
         for task in path.path:
-            print(f"{task.label}, earlyStart {task.earlyStart}, dur {task.duration} earlyFinish {task.earlyFinish}")
-            print(f"lateStart {task.lateStart}, float {task.float}, lateFinish {task.lateFinish}")
+            print(task.cliRep())
         print()
 
 main()

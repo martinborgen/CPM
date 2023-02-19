@@ -44,6 +44,15 @@ class Task:
 
     def __str__(self) -> str:
         return self.label
+    
+    def cliRep(self):
+        return (f"-"*28 +
+                f"\n|{self.earlyStart:^8}|{self.duration:^8}|{self.earlyFinish:^8}|\n"+
+                f"-"*28 +
+                f"\n|{'':^8}|{self.label:^8}|{'':^8}|\n"+
+                f"-"*28 +
+                f"\n|{self.lateStart:^8}|{self.float:^8}|{self.lateFinish:^8}|\n"+
+                f"-"*28 + "\n")
 
 class Path: # This might be re-made into a subclass of a list, come to think of it
     def __init__(self):
@@ -202,15 +211,15 @@ if __name__ == '__main__':
 
     for path in tree.paths:
         print(f"one path with total time {path.totTime} is:")
-        for task in path.path:
-            print(f"{task.label}, earlyStart {task.earlyStart}, dur {task.duration} earlyFinish {task.earlyFinish}")
-            print(f"lateStart {task.lateStart}, float {task.float}, lateFinish {task.lateFinish}")
+        for self in path.path:
+            print(f"{self.label}, earlyStart {self.earlyStart}, dur {self.duration} earlyFinish {self.earlyFinish}")
+            print(f"lateStart {self.lateStart}, float {self.float}, lateFinish {self.lateFinish}")
         print()
 
     for path in tree.criticalPaths:
         print(f"criticalPaths path with total time {path.totTime} is:")
-        for task in path.path:
-            print(f"{task.label}, earlyStart {task.earlyStart}, dur {task.duration} earlyFinish {task.earlyFinish}")
-            print(f"lateStart {task.lateStart}, float {task.float}, lateFinish {task.lateFinish}")
+        for self in path.path:
+            print(f"{self.label}, earlyStart {self.earlyStart}, dur {self.duration} earlyFinish {self.earlyFinish}")
+            print(f"lateStart {self.lateStart}, float {self.float}, lateFinish {self.lateFinish}")
         print()
     
