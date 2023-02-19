@@ -72,7 +72,6 @@ class TaskTree:
         if len(dependencies) == 0:
             self.noDeps.append(task)
         
-
     def mapDependencies(self):
         for task in self.tasks.values():
             for dep in task.dependencies:
@@ -85,39 +84,44 @@ class TaskTree:
 
     def generatePaths(self):    # this is essentially a bootstrapper to the recursive function. At the moment, it must be run only once I think
         current = self.start
-        self.paths.append([])
-        self.__generatePaths_RecursiveFun(current, self.paths[0])
+        self._pathRecFun(current, [])
             
-    def __generatePaths_RecursiveFun(self, current: Task, pathSoFar: List[Task]):   # This is is a recursive path-logger, that handles forks.
-        pathSoFar.append(current)       # append the current task
-        if not current.dependsOnThis:   # If no depends on this, we quit
+    def _pathRecFun(self, current: Task, pathSoFar: List[Task]):    # Recursively goes through the graph, clones the current path if it finds a fork.
+        pathSoFar.append(current)
+        if not current.dependsOnThis:
+            self.paths.append(pathSoFar)
             return
         
-        forks = []        # we prepare to store any forks
-        for task in current.dependsOnThis:  # create a collection of all forks recursively
-            newFork = []
-            self.__generatePaths_RecursiveFun(task, newFork)
-            forks.append(newFork)
-
-        for i, fork in enumerate(forks): # map the new forks to copies of the path so far
-            if i == len(forks) - 1: # we're not copying for the last fork, as we already had one path going here
+        forks = []
+        for i, _ in enumerate(current.dependsOnThis):
+            if i == len(current.dependsOnThis) - 1:
                 break
-            newPath = pathSoFar.copy()
-            newPath += fork
-            self.paths.append(newPath)
-        pathSoFar += forks[-1] # last fork is put on original pathSoFar
+            forks.append(pathSoFar.copy())
 
-    def printTree(self):
+        for i, fork  in enumerate(forks):
+            self._pathRecFun(current.dependsOnThis[i], fork)
+        self._pathRecFun(current.dependsOnThis[-1], pathSoFar)
+
+    def printTree(self):    # basic printree funciton, used for debugging currently
         for task in self.tasks.values():
             print(f"task {task.label}, that depends on {task.dependencies}")
     
+def pathPrinter(path):  # used for debugging mostly
+    for i in path:
+        print(i.label, end="")
+    print()
+
 if __name__ == '__main__':
     tree = TaskTree()
     tree.createTask('A')
     tree.createTask('B', ['A'])
     tree.createTask('D', ['B'])
     tree.createTask('C', ['A'])
-    tree.createTask('E', ['D', 'C'])
+    tree.createTask('P', ['B'])
+    tree.createTask('Q', ['A'])
+    tree.createTask('R', ['Q'])
+    tree.createTask('E', ['D', 'C', 'P', 'R'])
+
     tree.mapDependencies()
     tree.printTree()
 
