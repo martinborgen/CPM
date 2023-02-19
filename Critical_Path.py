@@ -12,7 +12,13 @@ class Task:
         # Initialize fields but leave them blank for now
         self.label: str = label
         if isinstance(dur, str):
-            self.duration = int(dur)
+            try:
+                self.duration = int(dur)
+            except ValueError:
+                try:
+                    self.duration = float(dur)
+                except ValueError:
+                    raise ValueError
         else:
             self.duration = dur
         self.earlyStart = None
@@ -47,11 +53,11 @@ class Task:
     
     def cliRep(self):
         return (f"-"*28 +
-                f"\n|{self.earlyStart:^8}|{self.duration:^8}|{self.earlyFinish:^8}|\n"+
+                f"\n|{round(self.earlyStart, 2):^8}|{round(self.duration, 2):^8}|{round(self.earlyFinish, 2):^8}|\n"+
                 f"-"*28 +
                 f"\n|{'':^8}|{self.label:^8}|{'':^8}|\n"+
                 f"-"*28 +
-                f"\n|{self.lateStart:^8}|{self.float:^8}|{self.lateFinish:^8}|\n"+
+                f"\n|{round(self.lateStart, 2):^8}|{round(self.float, 2):^8}|{round(self.lateFinish, 2):^8}|\n"+
                 f"-"*28 + "\n")
 
 class Path: # This might be re-made into a subclass of a list, come to think of it
