@@ -11,7 +11,10 @@ class Task:
         # Initialize the label
         # Initialize fields but leave them blank for now
         self.label: str = label
-        self.duration = dur
+        if isinstance(dur, str):
+            self.duration = int(dur)
+        else:
+            self.duration = dur
         self.earlyStart = None
         self.earlyFinish = None
         self.lateStart = None
@@ -75,9 +78,17 @@ class TaskTree:
         self.paths: List[Path] = []     # This list will hold all possible paths.
         self.criticalPaths = [Path()]      # dummy path so comparisions will return higher
 
+    def compute(self):
+        self.mapDependencies()
+        self.generatePaths()
+        self.updateEarlyLates()
+
     def createTask(self, label: str, dependencies: List[str]=[], dur=None): # Dependencies must be string labels, hence one has to add in chronological order?
-        if len(dependencies) > 0 and isinstance(dependencies[0], str): # if we have dependencies and it's strings, convert to list of tasks
-            depTasks = []
+        depTasks = []
+        if len(dependencies) > 0 and dependencies[0] == '':
+            pass
+        elif len(dependencies) > 0 and isinstance(dependencies[0], str): # if we have dependencies and it's strings, convert to list of tasks
+            
             for depLabel in dependencies:
                 depTasks.append(self.tasks[depLabel])
         else:
@@ -86,8 +97,11 @@ class TaskTree:
         task = Task(label, depTasks, dur)
         self.tasks[task.label] = task
         
-        if len(dependencies) == 0:
+        if len(task.dependencies) == 0:
             self.noDeps.append(task)
+
+    # def setStart(self, label: str):
+    #     self.start = self.tasks[label]
         
     def mapDependencies(self):  # Maps dependencies both ways
         for task in self.tasks.values():
@@ -123,8 +137,8 @@ class TaskTree:
             task.calculateFloat()
         
     def generatePaths(self):    # The beginning starts the recursive function. Then the critical path(s) is/are identified
-        current = self.start
-        self._pathRecFun(current, Path())
+        for current in self.noDeps:
+            self._pathRecFun(current, Path())
             
     def _pathRecFun(self, current: Task, pathSoFar: Path):    # Recursively goes through the graph, clones the current path if it finds a fork.
         if current.distanceFromStart < len(pathSoFar): # if statement, so that we only get the furthest distance
