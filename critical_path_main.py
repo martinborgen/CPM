@@ -16,16 +16,17 @@ def main():
         try:
             lines = csv_module.csv_reader(userInput)
             break
-        except:
+        except NameError:
             print("error, no such file found!")
             continue
 
     tree = Critical_Path.TaskTree()
     for line in lines:
-        tree.createTask(line[0], line[2].split(','), line[1])
+        tree.createTask(line[0], line[2:], line[1])
     # tree.setStart('A')
     tree.compute()
     for path in tree.criticalPaths:
+        print(f"Total ammount of paths found: {len(tree.paths)}")
         print(f"criticalPaths path with total time {path.totTime} is:")
         for task in path.path:
             print(task.cliRep())
