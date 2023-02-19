@@ -83,13 +83,29 @@ class TaskTree:
                 else:
                     depTask.dependsOnThis.append(task)
 
-    def generatePaths(self):
+    def generatePaths(self):    # this is essentially a bootstrapper to the recursive function. At the moment, it must be run only once I think
         current = self.start
-        while current.dependsOnThis:
-            pass
+        self.paths.append([])
+        self.__generatePaths_RecursiveFun(current, self.paths[0])
             
-    def __generatePaths_RecursiveFun(self, current):
-        pass 
+    def __generatePaths_RecursiveFun(self, current: Task, pathSoFar: List[Task]):   # This is is a recursive path-logger, that handles forks.
+        pathSoFar.append(current)       # append the current task
+        if not current.dependsOnThis:   # If no depends on this, we quit
+            return
+        
+        forks = []        # we prepare to store any forks
+        for task in current.dependsOnThis:  # create a collection of all forks recursively
+            newFork = []
+            self.__generatePaths_RecursiveFun(task, newFork)
+            forks.append(newFork)
+
+        for i, fork in enumerate(forks): # map the new forks to copies of the path so far
+            if i == len(forks) - 1: # we're not copying for the last fork, as we already had one path going here
+                break
+            newPath = pathSoFar.copy()
+            newPath += fork
+            self.paths.append(newPath)
+        pathSoFar += forks[-1] # last fork is put on original pathSoFar
 
     def printTree(self):
         for task in self.tasks.values():
@@ -104,3 +120,13 @@ if __name__ == '__main__':
     tree.createTask('E', ['D', 'C'])
     tree.mapDependencies()
     tree.printTree()
+
+    tree.start = tree.tasks['A']
+    tree.generatePaths()
+    print("total paths found:", len(tree.paths))
+
+    for path in tree.paths:
+        print("one path is:")
+        for task in path:
+            print(task.label)
+        print()
