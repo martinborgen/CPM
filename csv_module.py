@@ -2,16 +2,20 @@
 # Martin Borgén
 # 2023-02-19
 
-def csv_reader(filename: str):
-    # assume task,dur,dep -format for now
+def csv_reader(filename: str, sep=',', depSep=','):
+    # assume task,dur,dep -format for now. Dep is N ammounts of dependencies
     file = open(filename)
     lines = file.readlines()
     out = []
     for line in lines:
-        splitted = line.split(',', 2)
+        splitted = line.split(sep, 2)
         newLine = []
-        for field in splitted:
-            newLine.append(field.strip())
+        newLine += splitted[0:2]
+        deps = splitted[2]
+        depsSplitted = []
+        for dep in deps.split(depSep):
+            depsSplitted.append(dep.strip())
+        newLine += depsSplitted
         out.append(newLine)
     
     return out
