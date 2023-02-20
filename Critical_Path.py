@@ -29,7 +29,7 @@ class Task:
         self.dependencies: List[Task] = dependencies
         self.dependsOnThis: List[Task] = []
         self.distanceFromStart = 0
-        self.distanceFromEnd = 0
+        self.distanceFromEnd = 0 # unused
     
     def calculateFloat(self):
         self.float = self.lateFinish - self.earlyFinish
@@ -52,13 +52,13 @@ class Task:
         return self.label
     
     def cliRep(self):
-        return (f"-"*28 +
+        return (f"="*28 +
                 f"\n|{round(self.earlyStart, 2):^8}|{round(self.duration, 2):^8}|{round(self.earlyFinish, 2):^8}|\n"+
                 f"-"*28 +
                 f"\n|{'':^8}|{self.label:^8}|{'':^8}|\n"+
                 f"-"*28 +
                 f"\n|{round(self.lateStart, 2):^8}|{round(self.float, 2):^8}|{round(self.lateFinish, 2):^8}|\n"+
-                f"-"*28 + "\n")
+                f"="*28 + "\n")
 
 class Path: # This might be re-made into a subclass of a list, come to think of it
     def __init__(self):
@@ -86,14 +86,14 @@ class Path: # This might be re-made into a subclass of a list, come to think of 
 
 class TaskTree:
     def __init__(self):
-        self.start: Task = None
+        # self.start: Task = None
         self.end: Task = None
         self.tasks: dict[str:Task] = {}     # tasks is a dict where each label correstponds to a Task instnace
         self.noDeps: List[Task] = []    # a list of tasks with no dependencies, useful for finding starting points
         self.paths: List[Path] = []     # This list will hold all possible paths.
         self.criticalPaths = [Path()]      # dummy path so comparisions will return higher
 
-    def compute(self):
+    def compute(self): # The compute method manages the calculations in proper order
         self.mapDependencies()
         self.generatePaths()
         self.updateEarlyLates()
@@ -103,7 +103,6 @@ class TaskTree:
         if len(dependencies) > 0 and dependencies[0] == '':
             pass
         elif len(dependencies) > 0 and isinstance(dependencies[0], str): # if we have dependencies and it's strings, convert to list of tasks
-            
             for depLabel in dependencies:
                 depTasks.append(self.tasks[depLabel])
         else:
@@ -114,9 +113,6 @@ class TaskTree:
         
         if len(task.dependencies) == 0:
             self.noDeps.append(task)
-
-    # def setStart(self, label: str):
-    #     self.start = self.tasks[label]
         
     def mapDependencies(self):  # Maps dependencies both ways
         for task in self.tasks.values():
@@ -129,7 +125,7 @@ class TaskTree:
                     depTask.dependsOnThis.append(task)
 
     def updateEarlyLates(self): # updates the early and late finishes, as well as float for each task
-        # Forward pass
+        # pre-setup
         taskTiers = deque()     # TaskTiers will be a deque of deques, where each subdeque is a generation, i.e. a distance from start
         for _ in range(self.end.distanceFromStart + 1):
             taskTiers.append(deque())
@@ -187,14 +183,12 @@ class TaskTree:
             self._pathRecFun(current.dependsOnThis[i], fork)
         self._pathRecFun(current.dependsOnThis[-1], pathSoFar)
 
+    def getTask(self, taskLabel) -> Task:
+        return self.tasks[taskLabel]
+
     def printTree(self):    # basic printree funciton, used for debugging currently
         for task in self.tasks.values():
             print(f"task {task.label}, that depends on {task.dependencies}")
-    
-def pathPrinter(path):  # used for debugging mostly
-    for i in path:
-        print(i.label, end="")
-    print()
 
 if __name__ == '__main__':
     tree = TaskTree()
@@ -210,7 +204,7 @@ if __name__ == '__main__':
     tree.mapDependencies()
     tree.printTree()
 
-    tree.start = tree.tasks['A']
+    # tree.start = tree.tasks['A']
     tree.generatePaths()
     tree.updateEarlyLates()
     print("total paths found:", len(tree.paths))

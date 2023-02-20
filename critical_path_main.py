@@ -6,12 +6,12 @@
 import Critical_Path
 import csv_module
 
-def main():
-    userInput = ""
-    while True:
-        userInput = input("Enter a csv-filename: \n")
+def load_csv(userInput=""):
+    
+    while not userInput:
+        userInput = input("Enter a csv-filename: (Q to cancel)\n")
         if userInput == "Q" or userInput == "q":
-            quit()
+            return
         
         try:
             lines = csv_module.csv_reader(userInput)
@@ -23,13 +23,41 @@ def main():
     tree = Critical_Path.TaskTree()
     for line in lines:
         tree.createTask(line[0], line[2:], line[1])
-    # tree.setStart('A')
     tree.compute()
+    return tree
+
+def print_crit_path(tree):
+    print(f"Total ammount of paths found: {len(tree.paths)}")
     for path in tree.criticalPaths:
-        print(f"Total ammount of paths found: {len(tree.paths)}")
         print(f"criticalPaths path with total time {path.totTime} is:")
         for task in path.path:
             print(task.cliRep())
         print()
 
+def main():
+    tree = None
+    while True:
+        userInput = input("Input L to load, input Q to quit, input CP for critical path, input T to view task\n").upper()
+        if userInput == 'L':
+            tree = load_csv()
+        elif userInput == 'Q':
+            break
+        elif userInput == 'CP':
+            if tree:
+                print_crit_path(tree)
+            else:
+                print("Error, no tree loaded")
+        elif userInput == 'T':
+            if tree:
+                while True:
+                    userInput = input("Enter the label of task: (C to cancel)\n")
+                    if userInput.upper() == 'C':
+                        break
+                    
+                    try:
+                        print(tree.getTask(userInput).cliRep())
+                    except KeyError:
+                        print("Error, no such task in WBS!")
+            else:
+                print("Error, no tree loaded")
 main()
