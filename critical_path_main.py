@@ -9,7 +9,7 @@ import csv_module
 def load_csv(userInput=""):
     
     while not userInput:
-        userInput = input("Enter a csv-filename: (Q to cancel)\n")
+        userInput = input("Enter a csv-filename. (Q to cancel)\n")
         if userInput == "Q" or userInput == "q":
             return
         
@@ -37,7 +37,7 @@ def print_crit_path(tree):
 def main():
     tree = None
     while True:
-        userInput = input("Input L to load, input Q to quit, input CP for critical path, input T to view task\n").upper()
+        userInput = input("Input L to load, input Q to quit, input CP for critical path, input T to view task, EE to print early start/finishes\n").upper()
         if userInput == 'L':
             tree = load_csv()
         elif userInput == 'Q':
@@ -60,4 +60,8 @@ def main():
                         print("Error, no such task in WBS!")
             else:
                 print("Error, no tree loaded")
+        elif userInput == 'EE':
+            for task in tree.tasks.values():
+                print(f"{task.label}, {task.earlyStart}, {task.earlyFinish}")
+
 main()
