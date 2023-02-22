@@ -191,35 +191,4 @@ class TaskTree:
             print(f"task {task.label}, that depends on {task.dependencies}")
 
 if __name__ == '__main__':
-    tree = TaskTree()
-    tree.createTask('A', dur=3)
-    tree.createTask('B', ['A'], dur=2)
-    tree.createTask('D', ['B'], dur=2)
-    tree.createTask('C', ['A'], dur=3)
-    tree.createTask('P', ['B'], dur=2)
-    tree.createTask('Q', ['A'], dur=1)
-    tree.createTask('R', ['Q'], dur=1)
-    tree.createTask('E', ['D', 'C', 'P', 'R'], dur=5)
-
-    tree.mapDependencies()
-    tree.printTree()
-
-    # tree.start = tree.tasks['A']
-    tree.generatePaths()
-    tree.updateEarlyLates()
-    print("total paths found:", len(tree.paths))
-
-    for path in tree.paths:
-        print(f"one path with total time {path.totTime} is:")
-        for self in path.path:
-            print(f"{self.label}, earlyStart {self.earlyStart}, dur {self.duration} earlyFinish {self.earlyFinish}")
-            print(f"lateStart {self.lateStart}, float {self.float}, lateFinish {self.lateFinish}")
-        print()
-
-    for path in tree.criticalPaths:
-        print(f"criticalPaths path with total time {path.totTime} is:")
-        for self in path.path:
-            print(f"{self.label}, earlyStart {self.earlyStart}, dur {self.duration} earlyFinish {self.earlyFinish}")
-            print(f"lateStart {self.lateStart}, float {self.float}, lateFinish {self.lateFinish}")
-        print()
-    
+    pass
