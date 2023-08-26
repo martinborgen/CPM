@@ -5,19 +5,24 @@
 # from Critical_Path import TaskTree
 import Critical_Path
 import csv_module
+from exceptions import CSVseparatorError
 
-def load_csv(userInput=""):
+def load_csv(sep=",", userInput=""):
     
-    while not userInput:
+    while True:
         userInput = input("Enter a csv-filename. (Q to cancel)\n")
         if userInput == "Q" or userInput == "q":
             return
         
         try:
-            lines = csv_module.csv_reader(userInput)
+            lines = csv_module.csv_reader(userInput, sep=sep)
             break
         except NameError:
             print("error, no such file found!")
+            continue
+        except CSVseparatorError:
+            print("Error, seprator does not yeld three fields or is empty!")
+            sep = input("Enter new separator character: ")
             continue
 
     tree = Critical_Path.TaskTree()
@@ -36,10 +41,14 @@ def print_crit_path(tree):
 
 def main():
     tree = None
+    sep = ","
     while True:
         userInput = input("Input L to load, input Q to quit, input CP for critical path, input T to view task, EE to print early start/finishes\n").upper()
         if userInput == 'L':
-            tree = load_csv()
+            newSep = input("Current sep is {}, press return if OK, otherwise enter separator token and press return")
+            if len(newSep) > 0:
+                sep = newSep
+            tree = load_csv(sep=sep)
         elif userInput == 'Q':
             break
         elif userInput == 'CP':
