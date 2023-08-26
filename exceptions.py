@@ -1,0 +1,2 @@
+class CSVseparatorError(Exception):
+    pass
