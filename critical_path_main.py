@@ -73,4 +73,5 @@ def main():
             for task in tree.tasks.values():
                 print(f"{task.label}, {task.earlyStart}, {task.earlyFinish}")
 
-main()
+if __name__ == '__main__:
+    main()
